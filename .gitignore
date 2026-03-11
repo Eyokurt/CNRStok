@@ -57,4 +57,4 @@ uploads/
 *.njsproj
 *.sln
 *.sw?
-./.history
+.history
