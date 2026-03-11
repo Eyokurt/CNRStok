@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: stok_takip_db
+    environment:
+      POSTGRES_USER: stok_admin
+      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_DB: stok_takip_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+    container_name: stok_takip_backend
+    environment:
+      - DATABASE_URL=postgresql://stok_admin:secure_password_123@db:5432/stok_takip_db
+      - SECRET_KEY=YOUR_SUPER_SECRET_KEY_HERE_FOR_PRODUCTION
+    ports:
+      - "8000:8000"
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - vehicle_uploads:/app/uploads/vehicles
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: stok_takip_frontend
+    ports:
+      - "80:80"
+    restart: always
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  vehicle_uploads:

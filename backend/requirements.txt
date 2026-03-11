@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+python-dotenv
+reportlab
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+psycopg2-binary
+alembic
+slowapi
