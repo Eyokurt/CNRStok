@@ -1,0 +1,54 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, x64]
+
+    concurrency:
+      group: deploy-production-${{ github.ref_name }}
+      cancel-in-progress: true
+    
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Sync directory
+        run: >-
+          rsync -avz --delete
+            --exclude='.git'
+            --exclude='**/__pycache__'
+            --exclude='**/*.pyc'
+            --exclude='**/.venv'
+            --exclude='**/*.env'
+            ./ /home/ubuntu/CNRStok/
+
+      - name: Install dependencies (backend)
+        working-directory: /home/ubuntu/CNRStok/backend
+        run: uv pip install -r requirements.txt
+
+      - name: Install dependencies (frontend)
+        working-directory: /home/ubuntu/CNRStok/frontend
+        run: npm install
+
+      - name: Build & Update frontend
+        working-directory: /home/ubuntu/CNRStok/frontend
+        run: |
+          npm run build
+          sudo rsync -avz --delete dist/ /var/www/html/
+
+      - name: Restart services
+        run: |
+          sudo systemctl restart backend.service
+          sudo systemctl restart nginx.service
