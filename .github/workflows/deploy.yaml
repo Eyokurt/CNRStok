@@ -2,7 +2,8 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [main]
+    branches: [master]
+  workflow_dispatch:
 
 defaults:
   run:
@@ -25,13 +26,13 @@ jobs:
           fetch-depth: 1
 
       - name: Sync directory
-        run: >-
-          rsync -avz --delete
-            --exclude='.git'
-            --exclude='**/__pycache__'
-            --exclude='**/*.pyc'
-            --exclude='**/.venv'
-            --exclude='**/*.env'
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.venv' \
+            --exclude='.env' \
             ./ /home/ubuntu/CNRStok/
 
       - name: Install dependencies (backend)
