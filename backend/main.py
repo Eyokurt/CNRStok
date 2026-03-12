@@ -15,7 +15,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Stok Takip ve Fatura Yönetim Sistemi",
-    version="1.0.0",
+    version="1.0.1",
     description="Müşteri, stok ve fatura yönetimi için modern API"
 )
 
