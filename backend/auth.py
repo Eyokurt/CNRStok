@@ -3,7 +3,7 @@ import base64
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -16,8 +16,6 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_HOURS = settings.ACCESS_TOKEN_EXPIRE_MINUTES / 60
 
 # ─── Password Hashing ───
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def _prehash(password: str) -> str:
     digest = hashlib.sha256(password.encode("utf-8")).digest()
@@ -25,19 +23,22 @@ def _prehash(password: str) -> str:
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(_prehash(password))
+    pwd_bytes = _prehash(password).encode('utf-8')
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     try:
-        if pwd_context.verify(_prehash(plain), hashed):
-            return True
+        pwd_bytes = _prehash(plain).encode('utf-8')
+        hashed_bytes = hashed.encode('utf-8')
+        return bcrypt.checkpw(pwd_bytes, hashed_bytes)
     except Exception:
-        pass
-    try:
-        return pwd_context.verify(plain, hashed)
-    except ValueError:
-        return False
+        # Fallback in case raw password was saved or other hashing mismatch
+        try:
+            return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
+        except Exception:
+            return False
 
 # ─── JWT Token ───
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
@@ -49,15 +50,22 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_current_user(request: Request, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """Tüm korumalı endpoint'lerde kullanılacak dependency"""
-    from models import User  # circular import engellemek için
+    """Tum korumali endpoint'lerde kullanilacak dependency"""
+    from models import User  # circular import engellemek icin
+    from jose.exceptions import ExpiredSignatureError
     
     if not token:
         token = request.query_params.get("token")
         
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Geçersiz veya süresi dolmuş token",
+        detail="Gecersiz token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    expired_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Oturum suresi doldu. Lutfen tekrar giris yapin.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
@@ -70,6 +78,8 @@ def get_current_user(request: Request, token: str = Depends(oauth2_scheme), db: 
         if user_id_str is None:
             raise credentials_exception
         user_id = int(user_id_str)
+    except ExpiredSignatureError:
+        raise expired_exception
     except (JWTError, ValueError):
         raise credentials_exception
 

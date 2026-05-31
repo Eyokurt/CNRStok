@@ -52,6 +52,7 @@ class Product(Base):
     stock_quantity = Column(Integer, nullable=False, default=0)
     category = Column(String(100), nullable=True)
     critical_level = Column(Integer, nullable=False, default=10)
+    storage_location = Column(String(255), nullable=True, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="products")
@@ -129,6 +130,7 @@ class VehicleReception(Base):
     status = Column(String(20), nullable=False, default="in_shop")  # in_shop / delivered
     received_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     delivered_at = Column(DateTime, nullable=True)
+    qr_token = Column(String(100), unique=True, nullable=True, index=True)
 
     user = relationship("User", back_populates="vehicle_receptions")
     photos = relationship("VehiclePhoto", back_populates="reception", cascade="all, delete-orphan")

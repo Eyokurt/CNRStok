@@ -6,12 +6,38 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from database import engine, Base
 from routers import customers, products, invoices, dashboard, settings, auth_router, vehicles
 import os
+import logging
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from config import limiter, settings as app_settings
+from alembic.config import Config
+from alembic import command
 
-# Tüm tabloları oluştur
-Base.metadata.create_all(bind=engine)
+# Set up logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("api")
+
+def run_migrations():
+    try:
+        logger.info("Running database migrations...")
+        ini_path = os.path.join(os.path.dirname(__file__), "alembic.ini")
+        alembic_cfg = Config(ini_path)
+        script_dir = os.path.join(os.path.dirname(__file__), "alembic")
+        alembic_cfg.set_main_option("script_location", script_dir)
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Database migrations completed successfully.")
+    except Exception as e:
+        logger.error(f"Failed to run database migrations: {e}", exc_info=True)
+
+# Run migrations on startup
+run_migrations()
 
 app = FastAPI(
     title="Stok Takip ve Fatura Yönetim Sistemi",
@@ -22,6 +48,15 @@ app = FastAPI(
 # Rate Limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception during request {request.method} {request.url}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Sistemsel bir hata olustu. Lutfen teknik ekiple iletisime gecin."}
+    )
+
 
 # CORS
 origins = app_settings.ALLOWED_ORIGINS.split(",") if app_settings.ALLOWED_ORIGINS else []

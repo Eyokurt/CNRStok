@@ -67,12 +67,12 @@ export default function Layout({ user, onLogout }) {
               to={item.to}
               end={item.to === '/' || item.to === '/invoices'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 transform
                 ${isActive
-                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
+                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25 scale-[1.02]'
                   : dark
-                    ? 'text-surface-300 hover:bg-surface-800 hover:text-white'
-                    : 'text-surface-700 hover:bg-surface-100 hover:text-surface-900'
+                    ? 'text-surface-300 hover:bg-surface-800 hover:text-white hover:translate-x-1'
+                    : 'text-surface-700 hover:bg-surface-100 hover:text-surface-900 hover:translate-x-1'
                 }`
               }
             >
