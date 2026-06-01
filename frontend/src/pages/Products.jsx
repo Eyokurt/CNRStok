@@ -623,8 +623,8 @@ export default function Products() {
                             {/* SVG Defs */}
                             <defs>
                               <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#6366f1" stopOpacity={dark ? 0.35 : 0.2} />
-                                <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                                <stop offset="0%" stopColor="var(--color-primary-400)" stopOpacity={dark ? 0.35 : 0.2} />
+                                <stop offset="100%" stopColor="var(--color-primary-400)" stopOpacity={0} />
                               </linearGradient>
                             </defs>
 
@@ -639,7 +639,7 @@ export default function Products() {
                                     y1={y}
                                     x2={445}
                                     y2={y}
-                                    stroke={dark ? '#334155' : '#e2e8f0'}
+                                    stroke={dark ? '#1c282d' : '#d3d6d6'}
                                     strokeWidth={1}
                                     strokeDasharray="3 3"
                                   />
@@ -668,7 +668,7 @@ export default function Products() {
                               <path
                                 d={lineD}
                                 fill="none"
-                                stroke="#6366f1"
+                                stroke="var(--color-primary-500)"
                                 strokeWidth={2}
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -686,7 +686,7 @@ export default function Products() {
                                     y1={175}
                                     x2={x}
                                     y2={180}
-                                    stroke={dark ? '#475569' : '#cbd5e1'}
+                                    stroke={dark ? '#1c282d' : '#d3d6d6'}
                                     strokeWidth={1}
                                   />
                                   <text
@@ -708,7 +708,7 @@ export default function Products() {
                                 y1={15}
                                 x2={hoveredData.x}
                                 y2={175}
-                                stroke={dark ? 'rgba(99, 102, 241, 0.4)' : 'rgba(99, 102, 241, 0.25)'}
+                                stroke={dark ? 'rgba(95, 149, 152, 0.4)' : 'rgba(29, 84, 109, 0.25)'}
                                 strokeWidth={1.5}
                                 strokeDasharray="4 4"
                               />
@@ -721,15 +721,15 @@ export default function Products() {
                                   cx={hoveredData.x}
                                   cy={hoveredData.y}
                                   r={6.5}
-                                  fill="#6366f1"
+                                  fill="var(--color-primary-500)"
                                   className="animate-ping opacity-60"
                                 />
                                 <circle
                                   cx={hoveredData.x}
                                   cy={hoveredData.y}
                                   r={4.5}
-                                  fill="#6366f1"
-                                  stroke={dark ? '#0f172a' : '#ffffff'}
+                                  fill="var(--color-primary-500)"
+                                  stroke={dark ? '#061e29' : '#ffffff'}
                                   strokeWidth={1.5}
                                 />
                               </>
@@ -764,15 +764,15 @@ export default function Products() {
                                 left: `${(hoveredData.x / 460) * 100}%`,
                                 top: `${(hoveredData.y / 200) * 100 - 32}%`,
                                 transform: hoveredData.x > 300 ? 'translate(-108%, -50%)' : 'translate(8%, -50%)',
-                                backgroundColor: dark ? '#1e293b' : '#ffffff',
-                                borderColor: dark ? '#334155' : '#e2e8f0',
-                                color: dark ? '#f8fafc' : '#0f172a',
+                                backgroundColor: dark ? '#0a1c24' : '#ffffff',
+                                borderColor: dark ? '#1c282d' : '#d3d6d6',
+                                color: dark ? '#e9ebeb' : '#061e29',
                                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
                               }}
                             >
                               <div className="font-bold opacity-75">{hoveredData.label} {hoveredData.year}</div>
                               <div className="mt-0.5 flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
                                 <span className="font-semibold whitespace-nowrap">
                                   {chartType === 'sales' ? 'Satış:' : 'Stok:'} {chartType === 'sales' ? hoveredData.sales : hoveredData.stock} Adet
                                 </span>

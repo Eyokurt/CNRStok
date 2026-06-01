@@ -12,6 +12,7 @@ import Invoices from './pages/Invoices';
 import Settings from './pages/Settings';
 import VehicleReception from './pages/VehicleReception';
 import SharedVehicleHistory from './pages/SharedVehicleHistory';
+import SharedVehicleUpload from './pages/SharedVehicleUpload';
 
 function ProtectedRoute({ user, children }) {
   if (!user) return <Navigate to="/login" replace />;
@@ -68,9 +69,11 @@ export default function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="/shared/vehicle/:qrToken" element={<SharedVehicleHistory />} />
+          <Route path="/shared/vehicle/upload" element={<SharedVehicleUpload />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
   );
 }
+

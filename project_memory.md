@@ -34,6 +34,7 @@ c:\Users\eyupc\Documents\CNRStok
 │   │   │   script.py.mako
 │   │   │
 │   │   └───versions
+│   │           a8b2c6d4e2f1_add_storage_location.py # Added storage location column and index
 │   │           8b3f7f86d123_add_qr_token.py       # Added indexed unique QR token column
 │   │           942b8fbb4cd9_initial_migration.py  # Consolidated initial database schema structure
 │   │
@@ -152,6 +153,7 @@ erDiagram
         int stock_quantity
         string category
         int critical_level
+        string storage_location "nullable"
         datetime created_at
     }
 
@@ -222,6 +224,7 @@ erDiagram
 - **Customer Query Index:** `idx_business_name` on `(business_name)` (speeds up customer queries).
 - **Product Unique Index:** `idx_user_barcode` on `(user_id, barcode)` (prevents duplicate barcodes per user).
 - **Product Query Index:** `idx_product_name` on `(name)` (speeds up product searches).
+- **Product Query Index:** `ix_products_storage_location` on `(storage_location)` (speeds up warehouse location queries).
 
 ---
 
@@ -249,6 +252,7 @@ All backend endpoints are sub-routed under `/api`:
 - `POST /`: Creates a new product. Validates barcode uniqueness.
 - `PUT /{product_id}`: Updates stock amounts, prices, categories, or names.
 - `DELETE /{product_id}`: Deletes a product.
+- `GET /{product_id}/history`: Fetches 24-month sales history and estimated stock history for analytics.
 
 ### 🧾 4. Invoice Endpoint Router (`/api/invoices`)
 - `GET /`: Lists all generated invoices sorted by newest.
@@ -269,8 +273,9 @@ All backend endpoints are sub-routed under `/api`:
 - `POST /`: Admits a new vehicle (status initialized to `in_shop`).
 - `PUT /{reception_id}`: Updates diagnoses, complaints, and changes status (sets `delivered_at` timestamps on delivery).
 - `DELETE /{reception_id}`: Deletes the record and purges all uploaded vehicle images from the filesystem.
-- `POST /{reception_id}/photos`: Uploads multipart vehicle photos, gives them unique UUIDs, saves them on the disk, and writes them to the DB.
-- `DELETE /{reception_id}/photos/{photo_id}`: Purges photo file from system disk and deletes the row from the database.
+- `GET /{reception_id}/upload-token`: Issues short-lived signed JWT upload tokens.
+- `GET /public-upload-details`: Safely retrieves vehicle metadata using the token.
+- `POST /public-upload-photos`: Supports multiple file uploads, strict file validation, and rate-limiting.
 - `GET /{reception_id}/pdf`: Returns a professionally formatted A4 PDF acceptance sheet with dynamic vector-based tracking QR code.
 - `GET /{reception_id}/history`: Fetches past maintenance history for returning vehicles by vehicle plate matching.
 - `GET /public/{qr_token}`: Public unauthenticated endpoint fetching dynamic repair stats, timelines, and photos with dynamic GDPR-compliant PII masking.
@@ -287,3 +292,7 @@ CNRStok has been upgraded with the following production-ready features:
 4. **Enhanced PDF Layouts (Completed)**: Designed vector-drawn QR codes directly into reception forms using ReportLab, including Deep Indigo high-fidelity grid layouts, signature boxes, and wrapped paragraphs for clean layouts.
 5. **Frontend State & UI Optimizations (Completed)**: Replaced browser alerts with custom modal cards, structured responsive list loading state skeletons, implemented automated JWT expiration notifications, and polished dark/light color rules with smooth SVG navigations.
 6. **Secure QR-Code Tracking & Stepper Status (Completed)**: Enabled unauthenticated client dashboards with secure rate-limited endpoints (10 reqs/min per IP via SlowAPI) masking name/phone fields, combined with a 4-stage tracking workflow (`Kabul Edildi` -> `İşlemde / Onarımda` -> `Teslim Alınmaya Hazır` -> `Teslim Edildi`).
+7. **Premium Product Analytics Popups & Custom SVG Charts (Completed)**: Made products clickable on the stock page to open a dual-pane details popup. The right pane draws an interactive, beautiful, custom Vanilla SVG Area Chart showing 24-month sales history and estimated stock history (utilizing mathematical reverse reconstruction backwards from current stock). Includes a vertical tracker guide, glowing nodes, and custom HTML hover tooltips. Refactored global page fade-in animation rules to remove trailing layout transitions that broke browser positioning for absolute/fixed elements.
+8. **Interactive Warehouse Stock Location & Autocompletion suggester (Completed)**: Added a nullable indexed `storage_location` column to track where products are stored (e.g. shelves, bins, sections). Enforced this field in product creation and updates, equipped with a client-side suggester dropdown matching active locations to prevent duplicate entry names. Implemented a beautiful dual-tab structure ("Ürün Listesi" and "Konum Bazlı Dağılım") to group and list products dynamically inside premium location card containers.
+9. **Minimalist Modern UI Redesign & Premium Color Palette (Completed)**: Transited the entire user interface from a bubbly, generic "AI-generated" visual style to a sharp, modern, and minimalist design language. Integrated the specific premium color palette (`061E29` deep slate cyan backdrop, `1D546D` oceanic blue-teal primary accent, `5F9598` sage-teal secondary accent, and `F3F4F4` cool light gray surface backdrop). Redefined Tailwind CSS v4 custom theme scales and systematically normalized border radii globally (restraining buttons, inputs, cards, and modals to a subtle 4px–8px range instead of excessive rounded corners). Replaced all high-saturation gradient metric cards on the Dashboard with flat, adaptive layouts and custom pastel icon badges. Updated hardcoded indigo coordinates inside Products SVG analytics charts, customer-facing QR status tracking portals (`SharedVehicleHistory.jsx`), and workshop QR sharing dialogs (`VehicleReception.jsx`) for unified design cohesion.
+

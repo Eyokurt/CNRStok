@@ -392,3 +392,14 @@ class PublicVehicleHistoryResponse(BaseModel):
     company_name: Optional[str] = None
     company_phone: Optional[str] = None
     company_address: Optional[str] = None
+
+
+class PublicVehicleUploadDetailsResponse(BaseModel):
+    plate_number: str
+    vehicle_brand: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_color: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+

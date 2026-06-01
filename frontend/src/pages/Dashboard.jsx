@@ -17,18 +17,46 @@ export default function Dashboard() {
   if (loading) return <div className="flex items-center justify-center h-64"><div className="text-primary-500 text-lg">Yükleniyor...</div></div>;
 
   const cards = [
-    { label: 'Toplam Müşteri', value: stats?.total_customers ?? 0, color: 'from-primary-500 to-primary-700', icon: (
-      <svg className="w-8 h-8 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-    )},
-    { label: 'Toplam Ürün', value: stats?.total_products ?? 0, color: 'from-emerald-500 to-emerald-700', icon: (
-      <svg className="w-8 h-8 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-    )},
-    { label: 'Kesilen Fatura', value: stats?.total_invoices ?? 0, color: 'from-amber-500 to-amber-700', icon: (
-      <svg className="w-8 h-8 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-    )},
-    { label: 'Toplam Gelir', value: `₺${(stats?.total_revenue ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, color: 'from-rose-500 to-rose-700', icon: (
-      <svg className="w-8 h-8 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    )},
+    { 
+      label: 'Toplam Müşteri', 
+      value: stats?.total_customers ?? 0, 
+      iconColor: 'text-primary-500 dark:text-primary-400 bg-primary-500/10 dark:bg-primary-500/15', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    },
+    { 
+      label: 'Toplam Ürün', 
+      value: stats?.total_products ?? 0, 
+      iconColor: 'text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      )
+    },
+    { 
+      label: 'Kesilen Fatura', 
+      value: stats?.total_invoices ?? 0, 
+      iconColor: 'text-amber-500 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/15', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )
+    },
+    { 
+      label: 'Toplam Gelir', 
+      value: `₺${(stats?.total_revenue ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, 
+      iconColor: 'text-rose-500 dark:text-rose-400 bg-rose-500/10 dark:bg-rose-500/15', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
   ];
 
   return (
@@ -41,14 +69,19 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {cards.map((card, i) => (
-          <div key={i} className={`rounded-xl p-5 bg-gradient-to-br ${card.color} text-white shadow-lg 
-            hover:shadow-xl hover:scale-[1.02] transition-all duration-300`}>
+          <div key={i} className={`rounded-lg p-5 border shadow-sm transition-all duration-200
+            ${dark 
+              ? 'bg-surface-900 border-surface-800 hover:border-surface-700 text-white' 
+              : 'bg-white border-surface-200 hover:border-surface-300 text-surface-900'
+            }`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm opacity-90">{card.label}</p>
-                <p className="text-2xl font-bold mt-1">{card.value}</p>
+                <p className={`text-xs font-semibold tracking-wider uppercase ${dark ? 'text-surface-400' : 'text-surface-500'}`}>{card.label}</p>
+                <p className="text-2xl font-extrabold tracking-tight mt-1">{card.value}</p>
               </div>
-              {card.icon}
+              <div className={`p-2.5 rounded-md ${card.iconColor}`}>
+                {card.icon}
+              </div>
             </div>
           </div>
         ))}

@@ -76,7 +76,7 @@ export default function SharedVehicleHistory() {
           </p>
           <a
             href="/"
-            className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm transition-all shadow-sm"
+            className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl text-sm transition-all shadow-sm"
           >
             Ana Sayfaya Git
           </a>
@@ -118,7 +118,7 @@ export default function SharedVehicleHistory() {
         <div className="bg-white dark:bg-surface-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-surface-800 transition-all">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+              <h1 className="text-xl font-bold text-primary-600 dark:text-primary-400">
                 {data.company_name}
               </h1>
               <p className="text-slate-600 dark:text-slate-400 text-xs mt-1 max-w-lg">
@@ -128,7 +128,7 @@ export default function SharedVehicleHistory() {
             {data.company_phone && (
               <a
                 href={`tel:${data.company_phone}`}
-                className="inline-flex items-center self-start md:self-auto gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-950/60 transition-all border border-indigo-100 dark:border-indigo-900/30"
+                className="inline-flex items-center self-start md:self-auto gap-2 px-3 py-1.5 bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 rounded-xl text-sm font-medium hover:bg-primary-100 dark:hover:bg-primary-950/60 transition-all border border-primary-100 dark:border-primary-900/30"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -151,7 +151,7 @@ export default function SharedVehicleHistory() {
             
             {/* Progress Active Line */}
             <div 
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-indigo-500 rounded -z-0 transition-all duration-700" 
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary-500 rounded -z-0 transition-all duration-700" 
               style={{ width: stepperStep === 1 ? '0%' : stepperStep === 1.5 ? '16%' : stepperStep === 2 ? '33%' : stepperStep === 3 ? '66%' : '100%' }}
             />
 
@@ -159,7 +159,7 @@ export default function SharedVehicleHistory() {
             <div className="z-10 flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                 stepperStep >= 1 
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none' 
+                  ? 'bg-primary-600 text-white shadow-sm dark:shadow-none' 
                   : 'bg-slate-200 text-slate-500 dark:bg-surface-800 dark:text-slate-500'
               }`}>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,7 +175,7 @@ export default function SharedVehicleHistory() {
             <div className="z-10 flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                 stepperStep >= 1.5
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none' 
+                  ? 'bg-primary-600 text-white shadow-sm dark:shadow-none' 
                   : 'bg-slate-200 text-slate-500 dark:bg-surface-800 dark:text-slate-500'
               }`}>
                 {stepperStep === 1.5 ? (
@@ -197,7 +197,7 @@ export default function SharedVehicleHistory() {
             <div className="z-10 flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                 stepperStep >= 3
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none' 
+                  ? 'bg-primary-600 text-white shadow-sm dark:shadow-none' 
                   : 'bg-slate-200 text-slate-500 dark:bg-surface-800 dark:text-slate-500'
               }`}>
                 {stepperStep === 3 ? (
@@ -219,7 +219,7 @@ export default function SharedVehicleHistory() {
             <div className="z-10 flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                 stepperStep >= 4 
-                  ? 'bg-indigo-600 text-white shadow-md' 
+                  ? 'bg-primary-600 text-white shadow-sm' 
                   : 'bg-slate-200 text-slate-500 dark:bg-surface-800 dark:text-slate-500'
               }`}>
                 {stepperStep === 4 ? (
@@ -239,7 +239,7 @@ export default function SharedVehicleHistory() {
 
         {/* Current Active Vehicle Reception Info */}
         <div className="bg-white dark:bg-surface-900 rounded-2xl shadow-sm border border-slate-100 dark:border-surface-800 overflow-hidden">
-          <div className="bg-indigo-600 px-6 py-4 flex flex-col md:flex-row justify-between md:items-center gap-2">
+          <div className="bg-primary-600 px-6 py-4 flex flex-col md:flex-row justify-between md:items-center gap-2">
             <div>
               <span className="bg-white/20 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded tracking-wider">
                 Mevcut Kayıt
@@ -248,7 +248,7 @@ export default function SharedVehicleHistory() {
                 {current.vehicle_brand} {current.vehicle_model}
               </h2>
             </div>
-            <div className="bg-white text-indigo-700 font-bold px-3 py-1 rounded-xl text-center shadow-sm text-sm tracking-wider self-start md:self-auto">
+            <div className="bg-white text-primary-700 font-bold px-3 py-1 rounded-xl text-center shadow-sm text-sm tracking-wider self-start md:self-auto">
               {current.plate_number}
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function SharedVehicleHistory() {
                 <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">
                   Arıza Tespit ve Yapılan İşlemler
                 </span>
-                <div className="bg-indigo-50/40 dark:bg-indigo-950/10 p-4 rounded-xl border border-indigo-200/45 dark:border-indigo-900/20 text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line">
+                <div className="bg-primary-50/40 dark:bg-primary-950/10 p-4 rounded-xl border border-primary-200/45 dark:border-primary-900/20 text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line">
                   {current.diagnosis || 'Arıza tespit süreci devam ediyor.'}
                 </div>
               </div>

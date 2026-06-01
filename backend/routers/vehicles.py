@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from database import get_db
 from models import VehicleReception, VehiclePhoto, User, CompanySettings
 from schemas import (
@@ -11,11 +11,14 @@ from schemas import (
     VehicleReceptionResponse,
     PublicVehicleHistoryResponse,
     PublicVehicleReceptionResponse,
-    PublicVehiclePhotoResponse
+    PublicVehiclePhotoResponse,
+    PublicVehicleUploadDetailsResponse
 )
 from auth import get_current_user
 from pdf_generator import generate_vehicle_pdf
-from config import limiter
+from config import limiter, settings
+from jose import jwt, JWTError
+from jose.exceptions import ExpiredSignatureError
 import os
 import uuid
 import io
@@ -24,6 +27,110 @@ router = APIRouter(prefix="/api/vehicles", tags=["Vehicle Reception"])
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads", "vehicles")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+@router.get("/public-upload/details", response_model=PublicVehicleUploadDetailsResponse)
+@limiter.limit("30/minute")
+def get_public_upload_details(request: Request, token: str, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("type") != "qr_upload":
+            raise HTTPException(status_code=400, detail="Geçersiz işlem tipi")
+        
+        reception_id = payload.get("reception_id")
+        user_id_str = payload.get("sub")
+        if not reception_id or not user_id_str:
+            raise HTTPException(status_code=400, detail="Geçersiz token içeriği")
+            
+        user_id = int(user_id_str)
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Yükleme bağlantısının süresi dolmuş (10 dk limit). Lütfen bilgisayar ekranındaki QR kodu yenileyin.")
+    except (JWTError, ValueError):
+        raise HTTPException(status_code=401, detail="Geçersiz veya bozuk yükleme bağlantısı")
+        
+    rec = db.query(VehicleReception).filter(
+        VehicleReception.id == reception_id, VehicleReception.user_id == user_id
+    ).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Araç kaydı bulunamadı")
+        
+    return rec
+
+
+@router.post("/public-upload/photos")
+@limiter.limit("20/minute")
+async def public_upload_photos(
+    request: Request,
+    token: str,
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db)
+):
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("type") != "qr_upload":
+            raise HTTPException(status_code=400, detail="Geçersiz işlem tipi")
+        
+        reception_id = payload.get("reception_id")
+        user_id_str = payload.get("sub")
+        if not reception_id or not user_id_str:
+            raise HTTPException(status_code=400, detail="Geçersiz token içeriği")
+            
+        user_id = int(user_id_str)
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Yükleme bağlantısının süresi dolmuş. Lütfen bilgisayardan yeni bir QR kod alın.")
+    except (JWTError, ValueError):
+        raise HTTPException(status_code=401, detail="Geçersiz veya bozuk yükleme bağlantısı")
+        
+    rec = db.query(VehicleReception).filter(
+        VehicleReception.id == reception_id, VehicleReception.user_id == user_id
+    ).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Araç kaydı bulunamadı")
+
+    # Strict file validations
+    ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB per file
+
+    for file in files:
+        ext = os.path.splitext(file.filename or "photo.jpg")[1].lower() or ".jpg"
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Desteklenmeyen dosya formatı ({ext}). Sadece JPG, PNG, WEBP ve HEIC desteklenir."
+            )
+            
+        # Read content to check size and write to disk
+        content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Dosya boyutu çok büyük. Maksimum 10MB boyutunda görsel yükleyebilirsiniz."
+            )
+            
+        # Re-verify mime type for added security
+        content_type = file.content_type or ""
+        if not content_type.startswith("image/") and ext != ".heic":
+            raise HTTPException(
+                status_code=400,
+                detail="Yüklenen dosya geçerli bir görsel değil."
+            )
+            
+        filename = f"{uuid.uuid4().hex}{ext}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        
+        with open(filepath, "wb") as f:
+            f.write(content)
+            
+        photo = VehiclePhoto(
+            reception_id=rec.id,
+            file_path=f"/uploads/vehicles/{filename}"
+        )
+        db.add(photo)
+        
+    db.commit()
+    db.refresh(rec)
+    return {"message": "Fotoğraflar başarıyla yüklendi", "count": len(files)}
+
 
 
 @router.get("/", response_model=List[VehicleReceptionResponse])
@@ -368,4 +475,27 @@ def get_public_vehicle_history(qr_token: str, request: Request, db: Session = De
         company_phone=settings.company_phone if settings else "",
         company_address=settings.company_address if settings else ""
     )
+
+
+@router.get("/{reception_id}/upload-token")
+def get_upload_token(reception_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    rec = db.query(VehicleReception).filter(
+        VehicleReception.id == reception_id, VehicleReception.user_id == user.id
+    ).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Kayıt bulunamadı")
+    
+    # Generate secure short-lived token (10 minutes)
+    payload = {
+        "sub": str(user.id),
+        "reception_id": rec.id,
+        "type": "qr_upload",
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=10)
+    }
+    token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return {"token": token}
+
+
+
+
 

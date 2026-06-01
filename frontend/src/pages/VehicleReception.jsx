@@ -30,6 +30,12 @@ export default function VehicleReception() {
   const [loadingHistoryId, setLoadingHistoryId] = useState(null);
   const [qrShareReception, setQrShareReception] = useState(null);
 
+  // QR Mobile Upload states
+  const [qrUploadReceptionId, setQrUploadReceptionId] = useState(null);
+  const [qrUploadToken, setQrUploadToken] = useState(null);
+  const [qrUploadTimeLeft, setQrUploadTimeLeft] = useState(600);
+  const [qrUploadLoading, setQrUploadLoading] = useState(false);
+
   const [form, setForm] = useState(emptyForm);
 
   const fetchVehicles = async () => {
@@ -41,6 +47,51 @@ export default function VehicleReception() {
   };
 
   useEffect(() => { fetchVehicles(); }, [search]);
+
+  const handleOpenQrUpload = async (id) => {
+    setQrUploadLoading(true);
+    setQrUploadReceptionId(id);
+    setQrUploadTimeLeft(600);
+    try {
+      const res = await api.get(`/vehicles/${id}/upload-token`);
+      setQrUploadToken(res.data.token);
+    } catch {
+      toast.error("Yükleme bağlantısı alınamadı");
+      setQrUploadReceptionId(null);
+    } finally {
+      setQrUploadLoading(false);
+    }
+  };
+
+  // Poll for photos and handle countdown
+  useEffect(() => {
+    if (!qrUploadReceptionId) return;
+
+    // 1. Countdown timer
+    const countdown = setInterval(() => {
+      setQrUploadTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(countdown);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // 2. Polling for photos
+    const poller = setInterval(async () => {
+      try {
+        const res = await getVehicle(qrUploadReceptionId);
+        setVehicles(prev => prev.map(v => v.id === qrUploadReceptionId ? res.data : v));
+      } catch { /* ignore */ }
+    }, 4000);
+
+    return () => {
+      clearInterval(countdown);
+      clearInterval(poller);
+    };
+  }, [qrUploadReceptionId]);
+
 
   const handleToggleExpand = async (id) => {
     if (expandedId === id) {
@@ -316,14 +367,33 @@ export default function VehicleReception() {
 
               {/* Right: Photos */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h4 className="text-xs font-bold opacity-60 uppercase tracking-wider">Fotograflar</h4>
-                  <label className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all hover:scale-[1.02]
-                    ${dark ? 'bg-primary-500/15 text-primary-400 hover:bg-primary-500/25' : 'bg-primary-100 text-primary-700 hover:bg-primary-200'}`}>
-                    {uploadingId === v.id ? 'Yukleniyor...' : '+ Fotograf Ekle'}
-                    <input type="file" accept="image/*" multiple className="hidden"
-                      onChange={e => handlePhotoUpload(v.id, e.target.files)} />
-                  </label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button 
+                      onClick={() => handleOpenQrUpload(v.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-[1.02] flex items-center gap-1.5
+                        ${dark ? 'bg-primary-500/15 text-primary-400 hover:bg-primary-500/25 border border-primary-500/10' : 'bg-primary-100 text-primary-700 hover:bg-primary-200'}`}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-4v-4m0 4h4m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Telefondan Yükle (QR)
+                    </button>
+                    <label className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all hover:scale-[1.02] flex items-center gap-1.5
+                      ${dark ? 'bg-primary-500/15 text-primary-400 hover:bg-primary-500/25 border border-primary-500/10' : 'bg-primary-100 text-primary-700 hover:bg-primary-200'}`}>
+                      {uploadingId === v.id ? 'Yukleniyor...' : (
+                        <>
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                          + Bilgisayardan Yükle
+                        </>
+                      )}
+                      <input type="file" accept="image/*" multiple className="hidden"
+                        onChange={e => handlePhotoUpload(v.id, e.target.files)} />
+                    </label>
+                  </div>
                 </div>
                 {v.photos && v.photos.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
@@ -355,7 +425,7 @@ export default function VehicleReception() {
                   {receptionHistory[v.id].map(h => (
                     <div key={h.id} className={`p-3 rounded-lg text-xs border ${dark ? 'bg-surface-850 border-surface-800' : 'bg-slate-50 border-slate-200'}`}>
                       <div className="flex justify-between items-center mb-1.5 pb-1 border-b border-dashed border-slate-200 dark:border-surface-800">
-                        <span className="font-bold text-indigo-500">{formatDate(h.received_at)}</span>
+                        <span className="font-bold text-primary-505">{formatDate(h.received_at)}</span>
                         <span className="opacity-60">KM: {h.km_reading ? h.km_reading.toLocaleString('tr-TR') : '—'}</span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1.5">
@@ -400,7 +470,7 @@ export default function VehicleReception() {
                 Yazdir
               </button>
               <button onClick={() => setQrShareReception(v)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600/10 text-indigo-400 hover:bg-indigo-600/20 transition-colors inline-flex items-center gap-1.5">
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-primary-600/10 text-primary-400 hover:bg-primary-600/20 transition-colors inline-flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-4v-4m0 4h4m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -462,7 +532,7 @@ export default function VehicleReception() {
           </svg>
         </button>
         <button onClick={() => setQrShareReception(v)} title="QR Paylas"
-          className={`p-1.5 rounded-md transition-colors ${dark ? 'hover:bg-surface-700 text-indigo-400' : 'hover:bg-surface-200 text-indigo-600'}`}>
+          className={`p-1.5 rounded-md transition-colors ${dark ? 'hover:bg-surface-700 text-primary-400' : 'hover:bg-surface-200 text-primary-600'}`}>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-4v-4m0 4h4m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -766,7 +836,7 @@ export default function VehicleReception() {
             ${dark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border-surface-200 text-surface-900'}`}>
             
             <div className="flex items-center justify-between mb-6 pb-2 border-b dark:border-surface-800 border-slate-100">
-              <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-primary-600 dark:text-primary-400 flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-4v-4m0 4h4m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -787,7 +857,7 @@ export default function VehicleReception() {
               </div>
 
               <div className="text-center space-y-1 px-4">
-                <span className="text-xs font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full">
+                <span className="text-xs font-bold bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-full">
                   {qrShareReception.plate_number}
                 </span>
                 <p className={`text-sm font-semibold pt-1 ${dark ? 'text-surface-300' : 'text-slate-700'}`}>
@@ -814,7 +884,7 @@ export default function VehicleReception() {
                       navigator.clipboard.writeText(`${window.location.origin}/shared/vehicle/${qrShareReception.qr_token}`);
                       toast.success("Baglanti panoya kopyalandi");
                     }}
-                    className="absolute right-1 top-1 bottom-1 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold transition-all"
+                    className="absolute right-1 top-1 bottom-1 px-3 bg-primary-600 hover:bg-primary-700 text-white rounded text-[10px] font-bold transition-all"
                   >
                     Kopyala
                   </button>
@@ -849,6 +919,93 @@ export default function VehicleReception() {
 
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* QR Photo Upload Modal Dialog */}
+      {qrUploadReceptionId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className={`w-full max-w-md mx-4 rounded-2xl p-6 shadow-2xl transition-all duration-300 animate-scale-in border
+            ${dark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border-surface-200 text-surface-900'}`}>
+            
+            <div className="flex items-center justify-between mb-6 pb-2 border-b dark:border-surface-800 border-slate-100">
+              <h3 className="text-lg font-bold text-primary-600 dark:text-primary-400 flex items-center gap-2">
+                <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Telefondan Fotoğraf Yükle
+              </h3>
+              <button onClick={() => setQrUploadReceptionId(null)} className="opacity-50 hover:opacity-100 transition-opacity">✕</button>
+            </div>
+
+            {qrUploadLoading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-xs opacity-60">Bağlantı şifreleniyor...</p>
+              </div>
+            ) : qrUploadToken ? (
+              <div className="flex flex-col items-center space-y-4">
+                <span className="text-[10px] text-surface-400 text-center font-medium max-w-[280px]">
+                  Telefonunuzun kamerası ile aşağıdaki QR kodu taratarak fotoğraf yükleme ekranına gidin.
+                </span>
+                
+                {/* Dynamic local vector QR Code */}
+                <div className="p-4 bg-white rounded-xl shadow-inner border border-slate-100 flex items-center justify-center">
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/shared/vehicle/upload?token=${qrUploadToken}`} 
+                    size={180}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+
+                <div className="text-center space-y-1.5 px-4 w-full">
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-amber-500 font-semibold bg-amber-500/5 py-1 px-3 rounded-full border border-amber-500/10">
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.241 8H18" />
+                    </svg>
+                    <span>Canlı İzleniyor: Telefonda çektiğiniz görseller anında buraya gelecektir.</span>
+                  </div>
+                  
+                  <div className="text-center pt-2">
+                    <p className={`text-[11px] ${qrUploadTimeLeft === 0 ? 'text-red-500 font-bold' : 'opacity-60'}`}>
+                      {qrUploadTimeLeft === 0 
+                        ? 'Oturum süresi doldu. Lütfen kodu yenileyin.' 
+                        : `Bağlantı Süresi: ${Math.floor(qrUploadTimeLeft / 60)}d ${qrUploadTimeLeft % 60}s`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full pt-3 flex gap-2">
+                  <button 
+                    onClick={() => handleOpenQrUpload(qrUploadReceptionId)}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-xl border transition-all ${
+                      dark ? 'bg-surface-800 border-surface-700 hover:bg-surface-700 text-surface-300' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    Kodu Yenile
+                  </button>
+                  <button 
+                    onClick={() => setQrUploadReceptionId(null)}
+                    className="flex-1 py-2 text-xs font-semibold rounded-xl bg-primary-600 hover:bg-primary-700 text-white shadow-md shadow-primary-600/10 text-center transition-all flex items-center justify-center"
+                  >
+                    Kapat / Tamam
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-sm text-red-500 font-semibold">Token alınamadı. Lütfen tekrar deneyin.</p>
+                <button 
+                  onClick={() => handleOpenQrUpload(qrUploadReceptionId)}
+                  className="mt-4 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg"
+                >
+                  Tekrar Dene
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
